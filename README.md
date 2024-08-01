@@ -1,4 +1,4 @@
-# Curs valutar BNR (Banca Nationala a Romaniei) pentru RON
+# Curs valutar BNR pentru RON
 
 Librarie python care poate fi folosita pentru a afla cursul BNR pentru o anumita data.
 

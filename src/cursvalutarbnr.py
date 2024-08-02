@@ -49,7 +49,7 @@ class Currency(StrEnum):
 def format_date(date: str = None):
     """
     Convert string date in '2024-07-31' (YYYY-MM-DD) format.
-    Make sure date is not in the future.
+    If date is in the future, the latest date will be returned.
     """
 
     previous_date = datetime.now().date() - timedelta(days=1)
@@ -58,7 +58,7 @@ def format_date(date: str = None):
     )
 
     if date_obj > previous_date:
-        raise ValueError("Can't get BNR rates from the future or current day.")
+        date_obj = previous_date
 
     return date_obj
 
@@ -105,15 +105,13 @@ def get_exchange_rates_for_year(year: int = None):
             )
         exchange_rates[entries["@date"]] = rates
 
-    # print(f"Got new exchange rates from {bnr_xml_url}")
     return exchange_rates
 
 
 def ron_exchange_rate(
-    ammount: float, from_currency: Currency, to_currency: Currency, date: str = None
+    ammount: float, to_currency: Currency, date: str = None
 ):
     """
-    from_currency: one of Currency StrEnum value
     to_currency: one of Currency StrEnum value
     One of the parameters 'from_currency' or 'to_currency' must be RON.
     date: string isoformat date like '2024-07-31' (YYYY-MM-DD)
@@ -121,23 +119,18 @@ def ron_exchange_rate(
     Usage:
 
     ron_to_eur = ron_exchange_rate(
-        ammount=1, from_currency=Currency.RON, to_currency=Currency.EUR
+        ammount=1, to_currency=Currency.EUR
     )
-    eur_to_ron = ron_exchange_rate(
-        ammount=1, from_currency=Currency.EUR, to_currency=Currency.RON, date="2023-04-25"
-    )
+
     """
 
-    from_currency = from_currency.upper()
+    if to_currency == Currency.RON:
+        return ammount
+
     to_currency = to_currency.upper()
-    if from_currency not in Currency.values() or to_currency not in Currency.values():
+    if to_currency not in Currency.values():
         raise ValueError(
             "Currency provided is not supported. Please check Currency enum class."
-        )
-
-    if not (from_currency == Currency.RON or to_currency == Currency.RON):
-        raise ValueError(
-            "One of the parameters 'from_currency' or 'to_currency' must be RON."
         )
 
     date_obj = format_date(date)
@@ -151,12 +144,9 @@ def ron_exchange_rate(
             exchange_rates = json.load(file)
 
         if date_obj.isoformat() not in exchange_rates:
-            # print(f"Date '{date}' not found in file '{previous_saved_file}'. Getting new exchange rates...")
             exchange_rates = get_exchange_rates_for_year(date_obj.year)
             with open(previous_saved_file, "w") as file:
                 json.dump(exchange_rates, file)
-        # else:
-        # print(f"Date '{date_obj.isoformat()}' was found in file '{previous_saved_file}'.")
     else:
         exchange_rates = get_exchange_rates_for_year(date_obj.year)
         with open(previous_saved_file, "w") as file:
@@ -164,36 +154,8 @@ def ron_exchange_rate(
 
     day_rates = exchange_rates[date_obj.isoformat()]
 
-    # print(day_rates)
 
-    if from_currency == Currency.RON:
-        return round(ammount * day_rates[to_currency], 2)
-    else:
-        return round(ammount / day_rates[from_currency], 2)
+    return round(ammount * day_rates[to_currency], 2)
+    # return round(ammount / day_rates[from_currency], 2)
 
 
-
-# ron_to_eur = ron_exchange_rate(
-#     ammount=1, from_currency=Currency.RON, to_currency=Currency.EUR
-# )
-# eur_to_ron = ron_exchange_rate(
-#     ammount=100, from_currency=Currency.EUR, to_currency=Currency.RON, date="2023-04-25"
-# )
-# ron_to_gbp = ron_exchange_rate(1, Currency.RON, Currency.GBP)
-# gbp_to_ron = ron_exchange_rate(1, Currency.GBP, Currency.RON)
-
-# ron_to_mld = ron_exchange_rate(1, Currency.RON, Currency.MDL)
-# mld_to_ron = ron_exchange_rate(1, Currency.MDL, Currency.RON)
-
-# eur_to_mld = ron_exchange_rate(1, Currency.EUR, Currency.MDL)
-
-# print("ron_to_eur (4.92)", ron_to_eur)
-# print("eur_to_ron (0.20)", eur_to_ron)
-
-# print("ron_to_gbp (5.9)", ron_to_gbp)
-# print("gbp_to_ron (0.17)", gbp_to_ron)
-
-# print("ron_to_mld (0.26)", ron_to_mld)
-# print("mld_to_ron (3.83)", mld_to_ron)
-
-# print("eur_to_mld", eur_to_mld)

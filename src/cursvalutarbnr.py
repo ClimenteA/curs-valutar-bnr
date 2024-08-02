@@ -109,26 +109,26 @@ def get_exchange_rates_for_year(year: int = None):
 
 
 def ron_exchange_rate(
-    ammount: float, to_currency: Currency, date: str = None
+    ammount: float, currency: Currency, date: str = None
 ):
     """
-    to_currency: one of Currency StrEnum value
-    One of the parameters 'from_currency' or 'to_currency' must be RON.
+    currency: one of Currency StrEnum value
+    One of the parameters 'from_currency' or 'currency' must be RON.
     date: string isoformat date like '2024-07-31' (YYYY-MM-DD)
     
     Usage:
 
     ron_to_eur = ron_exchange_rate(
-        ammount=1, to_currency=Currency.EUR
+        ammount=1, currency=Currency.EUR
     )
 
     """
 
-    if to_currency == Currency.RON:
+    if currency == Currency.RON:
         return ammount
 
-    to_currency = to_currency.upper()
-    if to_currency not in Currency.values():
+    currency = currency.upper()
+    if currency not in Currency.values():
         raise ValueError(
             "Currency provided is not supported. Please check Currency enum class."
         )
@@ -155,7 +155,7 @@ def ron_exchange_rate(
     day_rates = exchange_rates[date_obj.isoformat()]
 
 
-    return round(ammount * day_rates[to_currency], 2)
+    return round(ammount * day_rates[currency], 2)
     # return round(ammount / day_rates[from_currency], 2)
 
 

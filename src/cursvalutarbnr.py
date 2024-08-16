@@ -113,7 +113,6 @@ def ron_exchange_rate(
 ):
     """
     currency: one of Currency StrEnum value
-    One of the parameters 'from_currency' or 'currency' must be RON.
     date: string isoformat date like '2024-07-31' (YYYY-MM-DD)
     
     Usage:
@@ -147,6 +146,10 @@ def ron_exchange_rate(
             exchange_rates = get_exchange_rates_for_year(date_obj.year)
             with open(previous_saved_file, "w") as file:
                 json.dump(exchange_rates, file)
+
+            if date_obj.isoformat() not in exchange_rates:
+                date_obj = max([datetime.strptime(date, "%Y-%m-%d").date() for date in exchange_rates.keys()])
+
     else:
         exchange_rates = get_exchange_rates_for_year(date_obj.year)
         with open(previous_saved_file, "w") as file:
@@ -156,6 +159,5 @@ def ron_exchange_rate(
 
 
     return round(ammount * day_rates[currency], 2)
-    # return round(ammount / day_rates[from_currency], 2)
 
 

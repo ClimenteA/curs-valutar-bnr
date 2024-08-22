@@ -15,7 +15,7 @@ with open("requirements.txt", "r") as r:
 
 setup(
     name="cursvalutarbnr",
-    version="0.0.5",
+    version="0.0.6",
     description="Afla cursul valutar in RON de la BNR.",
     url="https://github.com/ClimenteA/curs-valutar-bnr",
     author="Climente Alin",

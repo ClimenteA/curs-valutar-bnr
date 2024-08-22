@@ -1,18 +1,31 @@
+import time
 from src.cursvalutarbnr import Currency, ron_exchange_rate
 
 
+start = time.perf_counter()
 
 eur_to_ron = ron_exchange_rate(
-    ammount=1,                 # suma pe care vrei sa o convertesti la 'currency'
-    currency=Currency.EUR      # valuta (curency) in care vrei sa fie convertita suma specificata in 'ammount' 
+    ammount=1,              # suma pe care vrei sa o convertesti la 'currency'
+    currency=Currency.EUR,  # valuta (curency) in care vrei sa fie convertita suma specificata in 'ammount'
+    date="2022-01-01"       # poti specifica si data in isoformat pentru care vrei sa fie convertita suma
 )
+
 
 print("eur_to_ron", eur_to_ron)
+print("1. It took ", time.perf_counter() - start, " seconds!")
 
-ron_to_ron = ron_exchange_rate(
-    ammount=1, 
-    currency=Currency.RON, 
-    date="2023-04-25"          # poti specifica si data in isoformat pentru care vrei sa fie convertita suma
+# print("wait to invalidate")
+# time.sleep(3)
+# print("invalidated")
+
+start = time.perf_counter()
+
+eur_to_ron = ron_exchange_rate(
+    ammount=1,              # suma pe care vrei sa o convertesti la 'currency'
+    currency=Currency.EUR,  # valuta (curency) in care vrei sa fie convertita suma specificata in 'ammount'
+    date="2022-01-01"       # poti specifica si data in isoformat pentru care vrei sa fie convertita suma
 )
 
-print("ron_to_ron", ron_to_ron)
+
+print("eur_to_ron", eur_to_ron)
+print("2. It took ", time.perf_counter() - start, " seconds!")

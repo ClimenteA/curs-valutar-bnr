@@ -1,10 +1,9 @@
-import os
-import json
-import tempfile
+import time
 import requests
 import xmltodict
 from enum import StrEnum
 from datetime import datetime, timedelta
+from functools import lru_cache, wraps
 
 
 class Currency(StrEnum):
@@ -46,6 +45,26 @@ class Currency(StrEnum):
         return {e.value for e in cls}
 
 
+def ttl_lru_cache(seconds: int, maxsize: int | None = None):
+    def wrapper_cache(func):
+        func = lru_cache(maxsize=maxsize)(func)
+        func.lifetime = seconds
+        func.expiration = time.time() + func.lifetime
+
+        @wraps(func)
+        def wrapped_func(*args, **kwargs):
+            if time.time() >= func.expiration:
+                func.cache_clear()
+                func.expiration = time.time() + func.lifetime
+            return func(*args, **kwargs)
+
+        wrapped_func.cache_info = func.cache_info
+        wrapped_func.cache_clear = func.cache_clear
+        return wrapped_func
+
+    return wrapper_cache
+
+
 def format_date(date: str = None):
     """
     Convert string date in '2024-07-31' (YYYY-MM-DD) format.
@@ -63,6 +82,7 @@ def format_date(date: str = None):
     return date_obj
 
 
+@ttl_lru_cache(seconds=24*60*60) # 24 hours
 def get_exchange_rates_for_year(year: int = None):
     """
     Make a request to BNR API to get the XML with rates for the year provided.
@@ -108,13 +128,11 @@ def get_exchange_rates_for_year(year: int = None):
     return exchange_rates
 
 
-def ron_exchange_rate(
-    ammount: float, currency: Currency, date: str = None
-):
+def ron_exchange_rate(ammount: float, currency: Currency, date: str = None):
     """
     currency: one of Currency StrEnum value
     date: string isoformat date like '2024-07-31' (YYYY-MM-DD)
-    
+
     Usage:
 
     ron_to_eur = ron_exchange_rate(
@@ -126,38 +144,18 @@ def ron_exchange_rate(
     if currency == Currency.RON:
         return ammount
 
-    currency = currency.upper()
-    if currency not in Currency.values():
-        raise ValueError(
-            "Currency provided is not supported. Please check Currency enum class."
-        )
-
     date_obj = format_date(date)
 
-    previous_saved_file = os.path.join(
-        tempfile.gettempdir(), f"CursValutarBNRExchangeRatesForYear{date_obj.year}.json"
-    )
+    exchange_rates = get_exchange_rates_for_year(date_obj.year)
 
-    if os.path.exists(previous_saved_file):
-        with open(previous_saved_file, "r") as file:
-            exchange_rates = json.load(file)
-
-        if date_obj.isoformat() not in exchange_rates:
-            exchange_rates = get_exchange_rates_for_year(date_obj.year)
-            with open(previous_saved_file, "w") as file:
-                json.dump(exchange_rates, file)
-
-            if date_obj.isoformat() not in exchange_rates:
-                date_obj = max([datetime.strptime(date, "%Y-%m-%d").date() for date in exchange_rates.keys()])
-
-    else:
-        exchange_rates = get_exchange_rates_for_year(date_obj.year)
-        with open(previous_saved_file, "w") as file:
-            json.dump(exchange_rates, file)
+    if date_obj.isoformat() not in exchange_rates:
+        date_obj = max(
+            [
+                datetime.strptime(date, "%Y-%m-%d").date()
+                for date in exchange_rates.keys()
+            ]
+        )
 
     day_rates = exchange_rates[date_obj.isoformat()]
 
-
     return round(ammount * day_rates[currency], 2)
-
-

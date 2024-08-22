@@ -30,5 +30,4 @@ print("eur_to_ron", eur_to_ron)
 ```
 
 Parametrul `date` e optional. Daca e nespecificat va prelua cursul valutar din ziua precedenta.
-
-Datele de la BNR sunt salvate in folderul `temp` astfel se evita o eventuala banare si e mult mai rapid.
+Datele de la BNR sunt pastrate timp de 24 ore in cache.

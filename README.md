@@ -28,3 +28,5 @@ eur_to_ron = ron_exchange_rate(
 print("eur_to_ron", eur_to_ron)
 
 ```
+
+Pentru a nu apela api-ul de la BNR pentru fiecare apelare datele sunt salvate in temporary folder `cache_cursvalutarbnr`.

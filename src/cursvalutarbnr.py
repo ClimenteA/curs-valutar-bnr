@@ -1,3 +1,4 @@
+import os
 import json
 import datetime
 import tempfile
@@ -9,7 +10,8 @@ from diskcache import Cache
 from datetime import timedelta
 
 
-cache = Cache(tempfile.gettempdir())
+cache_path = os.path.join(tempfile.gettempdir(), "cache_cursvalutarbnr")
+cache = Cache(cache_path)
 
 
 class Currency(StrEnum):

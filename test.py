@@ -14,9 +14,6 @@ eur_to_ron = ron_exchange_rate(
 print("eur_to_ron", eur_to_ron)
 print("1. It took ", time.perf_counter() - start, " seconds!")
 
-# print("wait to invalidate")
-# time.sleep(3)
-# print("invalidated")
 
 start = time.perf_counter()
 

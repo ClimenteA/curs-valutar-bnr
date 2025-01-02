@@ -2,7 +2,6 @@
 
 Librarie python care poate fi folosita pentru a afla cursul BNR pentru RON la o data specificata sau nu.
 
-- Documentatie BNR: https://www.bnr.ro/Exchange-rate-list-in-XML-format-7512-Mobile.aspx
 
 ## Utilizare
 

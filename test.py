@@ -20,7 +20,7 @@ start = time.perf_counter()
 eur_to_ron = ron_exchange_rate(
     ammount=1,              # suma pe care vrei sa o convertesti la 'currency'
     currency=Currency.EUR,  # valuta (curency) in care vrei sa fie convertita suma specificata in 'ammount'
-    date="2022-01-01"       # poti specifica si data in isoformat pentru care vrei sa fie convertita suma
+    date="2024-05-12"       # poti specifica si data in isoformat pentru care vrei sa fie convertita suma
 )
 
 

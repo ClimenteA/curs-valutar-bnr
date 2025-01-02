@@ -71,9 +71,15 @@ def get_bnr_rates_for_year(year: int):
     https://www.bnr.ro/nbrfxrates10days.xml
     https://www.bnr.ro/files/xml/years/nbrfxrates{year}.xml
     """
-
-    r = requests.get(f"https://www.bnr.ro/files/xml/years/nbrfxrates{year}.xml")
+    cache = True
+    url = f"https://www.bnr.ro/files/xml/years/nbrfxrates{year}.xml"
+    r = requests.get(url)
     bnr_ron_rates = xmltodict.parse(r.content)
+
+    if "Cube" not in bnr_ron_rates["DataSet"]["Body"]:
+        cache = False
+        r = requests.get("https://www.bnr.ro/nbrfxrates10days.xml")
+        bnr_ron_rates = xmltodict.parse(r.content)
 
     exchange_rates = {}
     for entries in bnr_ron_rates["DataSet"]["Body"]["Cube"]:
@@ -83,8 +89,8 @@ def get_bnr_rates_for_year(year: int):
                 float(entry["#text"]) * int(entry.get("@multiplier", 1)), 4
             )
         exchange_rates[entries["@date"]] = rates
-
-    return exchange_rates
+    
+    return exchange_rates, cache
 
 
 def get_bnr_rates(date: datetime.datetime):
@@ -109,19 +115,20 @@ def get_bnr_rates(date: datetime.datetime):
             if date <= latest_cached_date:
                 return cached_exchange_rates
 
-    exchange_rates_year_requested = get_bnr_rates_for_year(year_requested)
-    exchange_rates_year_before = get_bnr_rates_for_year(year_before)
+    exchange_rates_year_requested, cache_year_requested = get_bnr_rates_for_year(year_requested)
+    exchange_rates_year_before, cache_year_before = get_bnr_rates_for_year(year_before)
     exchange_rates_year_before.update(exchange_rates_year_requested)
 
-    if year_requested < today.year:
-        with Cache(cache.directory) as reference:
-            reference.set(str(year_requested), json.dumps(exchange_rates_year_before))
+    if cache_year_requested is not False and cache_year_before is not False:
+        if year_requested < today.year:
+            with Cache(cache.directory) as reference:
+                reference.set(str(year_requested), json.dumps(exchange_rates_year_before))
 
-    if year_requested == today.year:
-        with Cache(cache.directory) as reference:
-            reference.set(
-                today.date().isoformat(), json.dumps(exchange_rates_year_before)
-            )
+        if year_requested == today.year:
+            with Cache(cache.directory) as reference:
+                reference.set(
+                    today.date().isoformat(), json.dumps(exchange_rates_year_before)
+                )
 
     return exchange_rates_year_before
 

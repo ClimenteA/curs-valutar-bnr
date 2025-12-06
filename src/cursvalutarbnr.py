@@ -2,7 +2,6 @@ import os
 import json
 import datetime
 import tempfile
-import tempfile
 import requests
 import xmltodict
 from enum import StrEnum

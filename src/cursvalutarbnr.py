@@ -7,7 +7,7 @@ import xmltodict
 from enum import StrEnum
 from diskcache import Cache
 from datetime import timedelta
-
+from decimal import Decimal, ROUND_HALF_UP
 
 cache_path = os.path.join(tempfile.gettempdir(), "cache_cursvalutarbnr")
 cache = Cache(cache_path)
@@ -84,9 +84,11 @@ def get_bnr_rates_for_year(year: int):
     for entries in bnr_ron_rates["DataSet"]["Body"]["Cube"]:
         rates = {}
         for entry in entries["Rate"]:
-            rates[entry["@currency"]] = round(
-                float(entry["#text"]) * int(entry.get("@multiplier", 1)), 4
-            )
+            currency = entry["@currency"]
+            value = Decimal(entry["#text"])
+            multiplier = Decimal(entry.get("@multiplier", "1"))
+            rates[currency] = float((value * multiplier).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP))
+
         exchange_rates[entries["@date"]] = rates
     
     return exchange_rates, cache
@@ -154,12 +156,12 @@ def format_date(date: str = None):
 
 
 def ron_exchange_rate(
-    ammount: float, currency: Currency, date: str | datetime.date = None
+    amount: float, currency: Currency, date: str | datetime.date = None
 ):
     """
-    Returns the ammount in RON for given currency
+    Returns the amount in RON for given currency
 
-    - ammount: is the number in given currency to be converted to ron
+    - amount: is the number in given currency to be converted to ron
     - currency: is one of Currency values (can be a string like: "EUR", "USD")
     - date: can be like: "2024-08-06" or datetime.date(2024, 1, 1) or datetime.datetime.now() or datetime.datetime.now().date()
 
@@ -167,7 +169,7 @@ def ron_exchange_rate(
 
     ```py
     in_ron = ron_exchange_rate(
-        ammount=1,
+        amount=1,
         currency="EUR",
         date="2024-08-06"
     )
@@ -195,4 +197,7 @@ def ron_exchange_rate(
     else:
         closest_date = min(dates_rawer, key=lambda date: abs(date - date_obj))
 
-    return round(ammount * exchange_rates_raw[closest_date.isoformat()][currency], 2)
+    rate = exchange_rates_raw[closest_date.isoformat()][currency]
+
+    result = (Decimal(str(amount)) * Decimal(str(rate))).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+    return float(result)

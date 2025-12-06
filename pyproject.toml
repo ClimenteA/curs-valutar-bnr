@@ -1,6 +1,6 @@
 [project]
 name = "cursvalutarbnr"
-version = "1.0.3"
+version = "1.0.5"
 description = "Conversie valuta straina in lei grei"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -31,4 +31,4 @@ py-modules = ["cursvalutarbnr"]
 
 
 # uv build
-# uv publish (check file .pypirc in home or create a fresh token in pypi)
+# uv publish (check file cat ~/.pypirc in home or create a fresh token in pypi)

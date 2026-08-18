@@ -66,18 +66,18 @@ def get_bnr_rates_for_year(year: int):
         'YYYY-MM-DD': {'CURRENCY': RON_VALUE}
     }
 
-    https://www.bnr.ro/nbrfxrates.xml
-    https://www.bnr.ro/nbrfxrates10days.xml
-    https://www.bnr.ro/files/xml/years/nbrfxrates{year}.xml
+    https://curs.bnr.ro/nbrfxrates.xml
+    https://curs.bnr.ro/nbrfxrates10days.xml
+    https://curs.bnr.ro/files/xml/years/nbrfxrates{year}.xml
     """
     cache = True
-    url = f"https://www.bnr.ro/files/xml/years/nbrfxrates{year}.xml"
+    url = f"https://curs.bnr.ro/files/xml/years/nbrfxrates{year}.xml"
     r = requests.get(url)
     bnr_ron_rates = xmltodict.parse(r.content)
 
     if "Cube" not in bnr_ron_rates["DataSet"]["Body"]:
         cache = False
-        r = requests.get("https://www.bnr.ro/nbrfxrates10days.xml")
+        r = requests.get("https://curs.bnr.ro/nbrfxrates10days.xml")
         bnr_ron_rates = xmltodict.parse(r.content)
 
     exchange_rates = {}
@@ -87,10 +87,12 @@ def get_bnr_rates_for_year(year: int):
             currency = entry["@currency"]
             value = Decimal(entry["#text"])
             multiplier = Decimal(entry.get("@multiplier", "1"))
-            rates[currency] = float((value * multiplier).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP))
+            rates[currency] = float(
+                (value * multiplier).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+            )
 
         exchange_rates[entries["@date"]] = rates
-    
+
     return exchange_rates, cache
 
 
@@ -116,14 +118,18 @@ def get_bnr_rates(date: datetime.datetime):
             if date <= latest_cached_date:
                 return cached_exchange_rates
 
-    exchange_rates_year_requested, cache_year_requested = get_bnr_rates_for_year(year_requested)
+    exchange_rates_year_requested, cache_year_requested = get_bnr_rates_for_year(
+        year_requested
+    )
     exchange_rates_year_before, cache_year_before = get_bnr_rates_for_year(year_before)
     exchange_rates_year_before.update(exchange_rates_year_requested)
 
     if cache_year_requested is not False and cache_year_before is not False:
         if year_requested < today.year:
             with Cache(cache.directory) as reference:
-                reference.set(str(year_requested), json.dumps(exchange_rates_year_before))
+                reference.set(
+                    str(year_requested), json.dumps(exchange_rates_year_before)
+                )
 
         if year_requested == today.year:
             with Cache(cache.directory) as reference:
@@ -199,5 +205,7 @@ def ron_exchange_rate(
 
     rate = exchange_rates_raw[closest_date.isoformat()][currency]
 
-    result = (Decimal(str(amount)) * Decimal(str(rate))).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+    result = (Decimal(str(amount)) * Decimal(str(rate))).quantize(
+        Decimal("0.0001"), rounding=ROUND_HALF_UP
+    )
     return float(result)
